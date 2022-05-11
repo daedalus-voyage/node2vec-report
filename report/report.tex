@@ -16,6 +16,10 @@
 \setlength{\tabcolsep}{8pt}
 \renewcommand{\arraystretch}{1.5}
 
+\usepackage{glossaries}
+\makeglossaries
+\input{glossary}
+
 \begin{document}
 \newboolean{anonymize}
 % Uncomment to create an anonymized version of your report
@@ -27,5 +31,11 @@
 \newpage
 
 \section{Introduction}
+\gls{maths}
+\clearpage
+
+\section{Glossary}
+
+\printglossaries
 
 \end{document}
