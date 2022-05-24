@@ -13,6 +13,7 @@
 \usepackage{hyperref}
 \usepackage{amssymb}
 \usepackage{amsmath}
+\usepackage[font=footnotesize]{caption}
 \setlength{\tabcolsep}{8pt}
 \renewcommand{\arraystretch}{1.5}
 
@@ -32,9 +33,58 @@
 
 \section{Introduction}
 \gls{maths}
-\clearpage
 
-\section{Parameters}
+\section{Node2Vec algorithm}
+
+@todo: describe and introduce the algorithm
+
+\section{Method and dataset}
+
+\subsection{Node2Vec datasets}
+
+\begin{wrapfigure}{r}{0.35\textwidth}
+  \centering
+  \vspace{-8mm}
+      \includegraphics[width=\linewidth]{./attachments/ppi-confusion.png}
+        \caption{Confusion matrix for PPI dataset}
+        \label{fig:ppi:confusion-matrix}
+    % \end{figure}
+\end{wrapfigure}
+
+The requested and approved datasets are the ones used in the original Node2Vec paper. Both the wikipedia and protein interaction datasets were considered, which are available as `.mat` files containing a compressed sparse column matrix.
+
+After loading the data and starting analysis, the Node2Vec algorithm experienced difficulty converging, producing inefficient node embeddings. Figure (\ref{fig:ppi:confusion-matrix}) shows the confusion matrix for one such attempted Node2Vec run, revealing failure to detect positive examples of the largest class in a highly unbalanced dataset. The dominance of negative samples allowed our classification to still obtain a high accuracy of 94\% while not learning features of interest. Balancing the dataset before classification did not reduce confusion.
+
+An incorrect import of the data or possibly mixups of certain identifiers is suspected, but even after careful inspection and given the lack of detailed documentation of the original datasets on the SNAP webpages, the Cora dataset was selected instead. Debugging the conversion of storage formats was considered out-of-scope for this report.
+
+\subsection{Cora dataset}
+
+The Cora dataset represents a citation network containing 5429 undirected edges, each representing a citation between two of its 2708 scientific publication nodes (papers). Each node is represented by a one-dimensional feature vector of size 1433 indicating the presence of one of 1433 unique dictionary words in each individual paper. Each node is additionally labeled with a single class, making the dataset suitable for single label node classification.
+
+The largest connected component contains 2485 nodes and 5209 edges, not much smaller than the full network, indicating a well connected network with few of its works isolated. This makes sense, as papers are written within collaborative networks consisting of universities and research groups. Figure (\ref{fig:cora:degree-distribution}) shows the degree distribution after removing 1\% of the most connected nodes for easier review of the graph. Most papers have a degree of less than 5 and only the top 1\% are more popularly cited. The highest degree of any node is 169.
+
+Betweenness in the Cora dataset is skewed with a maximum of 850663, a mean of 6596 and a mode of 0.
+
+\begin{figure}[!bp]
+  \centering
+  \begin{minipage}[b]{0.40\textwidth}
+    \includegraphics[width=\linewidth]{./attachments/degree-distribution.png}
+    \caption{Degree distribution Cora dataset (99\%)}
+    \label{fig:cora:degree-distribution}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[b]{0.40\textwidth}
+    \includegraphics[width=\linewidth]{./attachments/betweenness.png}
+    \caption{Betweenness distribution Cora dataset (full dataset)}
+    \label{fig:cora:betweenness-distribution}
+  \end{minipage}
+\end{figure}
+
+\section{Results}
+
+\subsection{Walk length}
+
+@todo: explain general evolution and the reasoning behind it
 
 \begin{figure}[!tbp]
   \centering
@@ -53,6 +103,15 @@
   \end{minipage}
 \end{figure}
 
+\subsection{Walk number}
+
+@todo: explain general evolution and the reasoning behind it
+
+\subsection{Q/P values}
+
+@todo : Discuss Q/P value results (explain dips, general evolution, what it means)
+
+% P VALUE ANALYSIS
 \begin{figure}[!tbp]
   \centering
   \begin{minipage}[b]{0.49\textwidth}
@@ -68,6 +127,7 @@
   \end{minipage}
 \end{figure}
 
+% Q VALUE ANALYSIS
 \begin{figure}[!tbp]
   \centering
   \begin{minipage}[b]{0.49\textwidth}
@@ -83,9 +143,13 @@
   \end{minipage}
 \end{figure}
 
+\section{Conclusion}
 
-\section{Glossary}
+@todo : What is needed here? Check slides?
+- focus on gained knowledge
 
-\printglossaries
+% \section{Glossary}
+
+% \printglossaries
 
 \end{document}

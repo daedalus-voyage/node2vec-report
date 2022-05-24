@@ -52,7 +52,7 @@ axis([ax2, ax3], axis_range);
 ylabel(tl, "Performance")
 xlabel(tl, x_label)
 
-saveas(gcf,append(filename, '_tiled.png'))
+saveas(gcf,append('./results/', filename, '_tiled.png'))
 
 %
 % 3 metrics in 1 graph
@@ -72,12 +72,13 @@ plot(X, y3,'MarkerSize',10,'Marker','.','Parent',axes2,...
     'LineWidth',2,'Color','#EDB120',...
     'LineStyle',':')
 
+axis(axis_range);
 ylabel("Performance")
 xlabel(x_label)
 
 legend("f1 (micro)", "f1 (macro)", 'Location', 'southeast', 'FontSize', 12)
 
-saveas(gcf,append(filename, '.png'))
+saveas(gcf,append('./results/', filename, '.png'))
 
 end
 

@@ -4,7 +4,7 @@ close all
 
 % Loading in data
 
-tbl = readtable('./cora-experiments-walk-length.csv', 'ReadRowNames', true);
+tbl = readtable('./results/cora-experiments-walk-length.csv', 'ReadRowNames', true);
 % plot(tbl, 'input', 'output')
 
 X = tbl{:, "walkLength"};
