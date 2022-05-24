@@ -1,0 +1,24 @@
+clear
+clc
+close all
+
+% Loading in data
+
+tbl = readtable('./cora-experiments-pvals-l9-n60.csv', 'ReadRowNames', true);
+% plot(tbl, 'input', 'output')
+
+range = 1:7;
+X = tbl{range, "p"};
+y1 = tbl{range, "accuracy"};
+y2 = tbl{range, "f1_micro"};
+y3 = tbl{range, "f1_macro"};
+
+plot_performance(X, y1, y2, y3, "P", [0 1 0.4 0.8], "p_values_long")
+
+range = 1:4;
+X = tbl{range, "p"};
+y1 = tbl{range, "accuracy"};
+y2 = tbl{range, "f1_micro"};
+y3 = tbl{range, "f1_macro"};
+
+plot_performance(X, y1, y2, y3, "P", [0 1 0.4 0.8], "p_values_short")

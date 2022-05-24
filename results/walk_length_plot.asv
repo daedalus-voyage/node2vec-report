@@ -1,0 +1,20 @@
+clear
+clc
+close all
+
+% Loading in data
+
+tbl = readtable('./cora-experiments-walk-length.csv', 'ReadRowNames', true);
+% plot(tbl, 'input', 'output')
+
+X = tbl{:, "walkLength"};
+y1 = tbl{:, "accuracy"};
+y2 = tbl{:, "f1_micro"};
+y3 = tbl{:, "f1_macro"};
+
+min_x = min(X);
+max_x = max(X);
+min_y = min(min(y2), min(y3));
+max_y = max(y2, y3);
+
+plot_performance(X, y2, y3, "Walk length", [min_x max_x 0 1], "walk_length")
