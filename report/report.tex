@@ -41,7 +41,7 @@ This project report discusses the Node2Vec algorithm that applies the ideas of W
 
 \subsection{Node2Vec}
 
-Node2Vec is an unsupervised transductive machine learning algorithm to learn feature representation for nodes in a network. To achieve this, first a dataset of node sequences is collected by a biased random walker. Viewing the node id’s encountered in random walks as the words in a sentence, Word2Vec is then used to produce feature embeddings encoding a node’s context. Armed with these embeddings, a classifier can be trained to predict node properties. Alternatively, edge properties might be predicted by converting node embeddings into edge embeddings. In essence, Node2Vec uses a random walker to sample a node's context in order to generate a dataset compatible with Word2Vec.
+Node2Vec is an semi-supervised transductive machine learning algorithm to learn feature representation for nodes in a network. To achieve this, first a dataset of node sequences is collected by a biased random walker. Viewing the node id’s encountered in random walks as the words in a sentence, Word2Vec is then used to produce feature embeddings encoding a node’s context. Armed with these embeddings, a classifier can be trained to predict node properties. Alternatively, edge properties might be predicted by converting node embeddings into edge embeddings. In essence, Node2Vec uses a random walker to sample a node's context in order to generate a dataset compatible with Word2Vec.
 
 Other approaches to sample the context of a node are depth-first (DFS) and breadth-first (BFS) sampling. DFS explores large parts of a network, creating a macro-view on the neighborhood of a node. This infers similarity based on \textit{homophily} where similar nodes belong to similar communities. DFS context exploration tends to not repeat nodes leading to characterizations with high variance.
 
@@ -71,7 +71,7 @@ Lower p-values create higher probabilities to backtrack on a walk, while higher 
 
 This report researches what values for all 4 parameters produce the best results on a classification task.
 
-\section{Method and dataset}
+\section{Data and method}
 
 \subsection{Node2Vec datasets}
 
@@ -94,9 +94,9 @@ An incorrect import of the data or possibly mixups of certain identifiers is sus
 
 The Cora dataset represents a citation network containing 5429 undirected edges, each representing a citation between two of its 2708 scientific publication nodes (papers). Each node is represented by a one-dimensional feature vector of size 1433 indicating the presence of one of 1433 unique dictionary words in each individual paper. Each node is additionally labeled with a single class, making the dataset suitable for single label node classification.
 
-The largest connected component contains 2485 nodes and 5209 edges, not much smaller than the full network, indicating a well connected network with few of its works isolated. This makes sense, as papers are written within collaborative networks consisting of universities and research groups. Figure (\ref{fig:cora:degree-distribution}) shows the degree distribution after removing 1\% of the most connected nodes for easier review of the graph. Most papers have a degree of less than 5 and only the top 1\% are more popularly cited. The highest degree of any node is 169.
+The largest connected component contains 2485 nodes and 5209 edges, not much smaller than the full network, indicating a well connected network with few of its works isolated. This makes sense, as papers are written within collaborative networks consisting of universities and research groups. Figure (\ref{fig:cora:degree-distribution}) shows the degree distribution after removing 1\% of the nodes with the highest degree to simplify visual review of the graph. Figure (\ref{fig:cora:degree-distribution}) shows most papers have a degree of less than 5 and only the top 1\% are more often linked by citation. The highest degree of any node is 169. Recent publications at the time of data collection might not have had an opportunity to connect to scientific networks while older papers might be expected to be better connected. Poorly received research might therefore not completely explain the large amount of less connected research papers.
 
-Betweenness in the Cora dataset is skewed with a maximum of 850663, a mean of 6596 and a mode of 0.
+Betweenness in the Cora dataset is also highly skewed with a maximum of 850663, a mean of 6596 and a mode of 0.
 
 \begin{figure}[!bp]
   \centering
@@ -112,6 +112,10 @@ Betweenness in the Cora dataset is skewed with a maximum of 850663, a mean of 65
     \label{fig:cora:betweenness-distribution}
   \end{minipage}
 \end{figure}
+
+\subsection{Method}
+
+
 
 \section{Results}
 
@@ -290,6 +294,23 @@ Betweenness in the Cora dataset is skewed with a maximum of 850663, a mean of 65
 
 @todo : What is needed here? Check slides?
 - focus on gained knowledge
+
+\section{Code}
+
+The code can be consulted at https://github.com/daedalus-voyage/node2vec-report/
+
+The main files of interest are:
+
+\begin{tabular}{c c}
+
+  \hline
+  Description & Link   \\
+  \hline\hline
+
+  & https://github.com/daedalus-voyage/node2vec-report/blob/main/cora_node2vec.ipynb \\ \hline
+  
+
+\end{tabular}
 
 % \section{Glossary}
 
