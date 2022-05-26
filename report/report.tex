@@ -2,8 +2,10 @@
 
 \usepackage[english]{babel}
 \usepackage{graphicx}
+\usepackage{caption}
 \usepackage{wrapfig}
-\usepackage[colorlinks, linkcolor=black, citecolor=black, urlcolor=black]{hyperref}
+% \usepackage[colorlinks, linkcolor=black, citecolor=black, urlcolor=black]{hyperref}
+\usepackage[colorlinks, citecolor=black, urlcolor=blue, linkcolor=blue]{hyperref}
 \usepackage{geometry}
 \geometry{tmargin=3cm, bmargin=2.2cm, lmargin=2.2cm, rmargin=2cm}
 \usepackage{todonotes} %Used for the figure placeholders
@@ -13,6 +15,7 @@
 \usepackage{hyperref}
 \usepackage{amssymb}
 \usepackage{amsmath}
+\usepackage{array}
 \usepackage[font=footnotesize]{caption}
 \setlength{\tabcolsep}{8pt}
 \renewcommand{\arraystretch}{1.5}
@@ -33,27 +36,27 @@
 
 \section{Introduction}
 
-Graphs networked nature presents challenges in applying classic machine learning algorithms that depend on the default setting expecting tabular data. This default setting works well for tasks where a fixed set of parameters is mapped to a fixed number of outcomes. Graph data cannot readily make use of such a setting because of the varying degrees of their nodes and by extension their varying structural connections.
+The nature of graph networks presents challenges in applying classic machine learning algorithms that often expect tabular input data. This default setting works well for tasks where a fixed set of parameters are mapped to a fixed number of outcomes. Graph data cannot readily make use of such a setting because of the varying degrees of their nodes and by extension their varying structural connections.
 
-Textual data has a similar challenge where its unbounded nature lacks the structure of the default setting. Word2Vec is an algorithm coping with this challenge by assuming the fixed immediate context of a word to be reflective of its semantic meaning. Using multiple examples of such word contexts, a word can be represented by a fixed length feature vector, the word embedding.
+Textual data has a similar challenge where its unbounded nature lacks the structure of the default setting. Word2Vec is an algorithm coping with this challenge by assuming the fixed immediate context of a word to be reflective of its semantic meaning. It advances a fixed length sliding window over the text to extract a word with context words that immediately surround it, producing a collection of fixed-length tabular texts compatible with the default setting. After this transformation, Word2Vec uses one of two training tasks to generate embeddings: CBOW or skip-gram. Using CBOW, context words around a central word are used as input to predict the target word in the center. Using skip-gram, the central word is used as input and the model is trained to predict the context words around it. The trained weights of the model can then be extracted as embedding vectors.
 
-This project report discusses the Node2Vec algorithm that applies the ideas of Word2Vec to graph data for a node classification task. Different parameters of the algorithm are inspected against a common dataset and their performance is evaluated. In our conclusion, Node2Vec is compared to similar algorithms using the obtained results.
+This project report discusses the Node2Vec algorithm that applies the ideas of Word2Vec to graph data for a node classification task. Different parameters of the algorithm are inspected against a common dataset and their performance is evaluated.
 
 \subsection{Node2Vec}
 
-Node2Vec is an semi-supervised transductive machine learning algorithm to learn feature representation for nodes in a network. To achieve this, first a dataset of node sequences is collected by a biased random walker. Viewing the node id’s encountered in random walks as the words in a sentence, Word2Vec is then used to produce feature embeddings encoding a node’s context. Armed with these embeddings, a classifier can be trained to predict node properties. Alternatively, edge properties might be predicted by converting node embeddings into edge embeddings. In essence, Node2Vec uses a random walker to sample a node's context in order to generate a dataset compatible with Word2Vec.
+Node2Vec is a semi-supervised transductive machine learning algorithm that learns feature representation from nodes in a network. To achieve this, first a dataset of node sequences is collected by a biased random walker. The random walks are then interpreted as descriptive of a node's structural context within the graph, and perform a similar role as the sliding window in Word2Vec. Similarly, they can be used to produce feature embeddings that represent a node’s structural context in a network. Armed with these embeddings, a classifier can be trained to predict node properties, such as class labels. Alternatively, edge properties might be predicted by converting node embeddings into edge embeddings, for example by concatenation, averaging or other binary operations. In essence, Node2Vec uses a random walker to sample a node's context in order to generate a dataset compatible with Word2Vec.
 
 Other approaches to sample the context of a node are depth-first (DFS) and breadth-first (BFS) sampling. DFS explores large parts of a network, creating a macro-view on the neighborhood of a node. This infers similarity based on \textit{homophily} where similar nodes belong to similar communities. DFS context exploration tends to not repeat nodes leading to characterizations with high variance.
 
-BFS restricts exploration to the immediate surroundings of a node and tends to sample duplicate nodes, isolating a microsopic view with low variance in its characterization. BFS will therefore define similarity as a \textit{structural equivalence} based on the network role of a node (bridge node, hubs, etc.).
+BFS restricts exploration to the immediate surroundings of a node and tends to duplicate sampled nodes, generating a microsopic view with low variance in its characterization. BFS will therefore define similarity as a \textit{structural equivalence} based on the node's role in the network (bridge node, hubs, etc.).
 
 Node2Vec improves on these strategies by providing a configuration mechanism to choose which levels of \textit{homophilic} and \textit{structural equivalence} are proper for the task at hand. This approach promises a more realistic definition of similarity which is never accurately defined as either one of the described DFS and BFS approaches.
 
 \subsection{Random walk parameters}
 
-Instead of DF or BF sampling approaches, Node2Vec uses a biased random walker configured using 4 parameters: walk length, walk number, P, and Q values. For each  node in the graph, the \textit{graph number} defines how many random walks are performed. Every random walk samples new nodes until a maximum number of nodes, specified by a \textit{walk length} parameter.
+Instead of DFS or BFS sampling approaches, Node2Vec uses a biased random walker configured using 4 parameters: walk length, walk number, p, and q values. For each  node in the graph, the \textit{graph number} defines how many random walks are performed. Every random walk samples new nodes until a maximum number of nodes, specified by the \textit{walk length}.
 
-The $2^{nd}$ order random walker configures the reach of the random walks using parameters $p$ and $q$. For a random walker traversing edge $(t, v)$ and currently residing at node $v$, $\pi_{vx}$ defines a transition probability on edges $(v, x)$ leading from $v$. Unnormalized, the transition probability calculates as $\pi_{v x}=\alpha_{p q}(t, x) \cdot w_{v x}$, with the search bias $\alpha$ taking values as follows:
+Every random walk defines a $2^{nd}$ order Markov chain $... \to t \to v \to x$ where new nodes $x$ are sampled using a transition probability $\pi_{v,x}$ considering the previous 2 nodes $t$ and $v$. \textit{P} and \textit{q} parameterize $\alpha_{p q}(t, x)$ defining a bias for $\pi_{v,x}$ in sampling the transition of $v \to x$. Unnormalized, the transition probability calculates as $\pi_{v x}=\alpha_{pq}(t, x) \cdot w_{vx}$, using edge weights $w_{vx}$ and bias:
 
 $$
 \alpha_{p q}(t, x)=\left\{\begin{array}{ll}
@@ -63,13 +66,13 @@ $$
 \end{array}\right.
 $$
 
-Walking from $t$ first to $v$ and then to $x$, $d_{tx}$ represents the shortest path between $t$ and $x$. Intuitively, this means that $p$ and $q$ encode both the speed with which the walker explores and how easily it leaves the neighborhood. Tweaking these parameters allows the algorithm to interpolate between DFS and BFS approaches.
+The transition bias is conditioned on $d_{tx}$, the shortest path length between nodes $t$ and$x$ in our random walk. $d_{tx} = 0$ therefore represents reverals, $d_{tx} = 1$ represent distance preserving samples (relative to $t$), and $d_{tx} = 2$ represents advancing samples moving further away from $t$. Intuitively, $p$ and $q$ encode both the speed with which the walker explores and the ease with which it leaves it's neighborhood. Tweaking these parameters allows the algorithm to interpolate between DFS and BFS sampling approaches.
 
-Lower q-values produce a higher probability of leaving the neighborhood, while higher q-values prefer sticking to the same neighborhood. The q-value is therefore also called the \textit{in-out parameter}.
+Lower \textit{q} values produce a higher probability of leaving the neighborhood, while higher \textit{q} values prefer sticking to the same neighborhood. The \textit{q} value is therefore also called the \textit{in-out parameter}.
 
-Lower p-values create higher probabilities to backtrack on a walk, while higher values reduce the probability of redundant nodes in a walk. The p-value is also called the \textit{return paramter}.
+Lower \textit{p} values create higher probabilities to backtrack on a walk, while higher \textit{p} values reduce the probability of redundant nodes in a walk. The \textit{p} value is also called the \textit{return parameter}.
 
-This report researches what values for all 4 parameters produce the best results on a classification task.
+This report searches for the values in all 4 parameters that produce the best results on a classification task.
 
 \section{Data and method}
 
@@ -86,48 +89,58 @@ This report researches what values for all 4 parameters produce the best results
 
 The requested and approved datasets are the ones used in the original Node2Vec paper. Both the wikipedia and protein interaction datasets were considered, which are available as `.mat` files containing a compressed sparse column matrix.
 
-After loading the data and starting analysis, the Node2Vec algorithm experienced difficulty converging, producing inefficient node embeddings. Figure (\ref{fig:ppi:confusion-matrix}) shows the confusion matrix for one such attempted Node2Vec run, revealing failure to detect positive examples of the largest class in a highly unbalanced dataset. The dominance of negative samples allowed our classification to still obtain a high accuracy of 94\% while not learning features of interest. Balancing the dataset before classification did not reduce confusion.
+After loading the data and starting analysis, the Node2Vec algorithm experienced difficulty converging, producing inefficient node embeddings. Figure (\ref{fig:ppi:confusion-matrix}) shows the confusion matrix for one such attempted Node2Vec run, revealing failure to predict positive examples of the largest class in a highly unbalanced dataset. The dominance of negative samples allowed our classification to still obtain a high accuracy of 94\% while not learning features of interest. Balancing the dataset before classification did not reduce confusion.
 
-An incorrect import of the data or possibly mixups of certain identifiers is suspected, but even after careful inspection and given the lack of detailed documentation of the original datasets on the SNAP webpages, the Cora dataset was selected instead. Debugging the conversion of storage formats was considered out-of-scope for this report.
+An incorrect import of the data or possibly mixups of certain identifiers is suspected. Ater careful inspection and given the lack of detailed documentation of the original datasets on the SNAP webpages, another dataset was considered instead for the investigation (the Cora dataset). Debugging the import of data formats was considered out-of-scope for this report.
 
 \subsection{Cora dataset}
 
 The Cora dataset represents a citation network containing 5429 undirected edges, each representing a citation between two of its 2708 scientific publication nodes (papers). Each node is represented by a one-dimensional feature vector of size 1433 indicating the presence of one of 1433 unique dictionary words in each individual paper. Each node is additionally labeled with a single class, making the dataset suitable for single label node classification.
 
+\begin{minipage}[c][17em]{0.45\textwidth}
+  \includegraphics[width=\linewidth]{./attachments/degree-distribution.png}
+  \captionof{figure}{Degree distribution Cora dataset (99\%)}
+  \label{fig:cora:degree-distribution}
+\end{minipage}
+\hfill
+\begin{minipage}[c][17em]{0.45\textwidth}
+  \includegraphics[width=\linewidth]{./attachments/betweenness.png}
+  \captionof{figure}{Betweenness distribution Cora dataset (full dataset)}
+  \label{fig:cora:betweenness-distribution}
+\end{minipage}
+
 The largest connected component contains 2485 nodes and 5209 edges, not much smaller than the full network, indicating a well connected network with few of its works isolated. This makes sense, as papers are written within collaborative networks consisting of universities and research groups. Figure (\ref{fig:cora:degree-distribution}) shows the degree distribution after removing 1\% of the nodes with the highest degree to simplify visual review of the graph. Figure (\ref{fig:cora:degree-distribution}) shows most papers have a degree of less than 5 and only the top 1\% are more often linked by citation. The highest degree of any node is 169. Recent publications at the time of data collection might not have had an opportunity to connect to scientific networks while older papers might be expected to be better connected. Poorly received research might therefore not completely explain the large amount of less connected research papers.
 
 Betweenness in the Cora dataset is also highly skewed with a maximum of 850663, a mean of 6596 and a mode of 0.
 
-\begin{figure}[!bp]
-  \centering
-  \begin{minipage}[b]{0.40\textwidth}
-    \includegraphics[width=\linewidth]{./attachments/degree-distribution.png}
-    \caption{Degree distribution Cora dataset (99\%)}
-    \label{fig:cora:degree-distribution}
-  \end{minipage}
-  \hfill
-  \begin{minipage}[b]{0.40\textwidth}
-    \includegraphics[width=\linewidth]{./attachments/betweenness.png}
-    \caption{Betweenness distribution Cora dataset (full dataset)}
-    \label{fig:cora:betweenness-distribution}
-  \end{minipage}
-\end{figure}
+% \begin{figure}[!bp]
+%   \centering
+
+% \end{figure}
 
 \subsection{Method}
 
+The analysis makes use of the \href{https://stellargraph.readthedocs.io}{stellargraph} library. More specifically, we followed the procedure outlined in the \href{https://stellargraph.readthedocs.io/en/stable/demos/node-classification/keras-node2vec-node-classification.html}{Node2Vec classification demo using keras}. To produce node embeddings, a neural network with a single hidden layer is used to predict a context node $v_j$ given a target node $v_i$.
 
+@todo --> elaborate on the method.
 
 \section{Results}
 
+The effect of multiple parameters on our model performance is described below. F1 micro and macro scores are used to evaluate our single label classification task. Since each node has just one class label assigned, adding accuracy scores would not be informative. Differences in micro and macro scores indicate class specific issues that can further be investigated using confusion matrices.
+
 \subsection{Walk length}
 
-\begin{table}[!hbtp]
+A Node2Vec experiment was run using $q = 1.0$, $p = 1.0$ for $20$ walks per node. Each experiment was repeated $3$ times to average results to account for random initialization of weights. The results plotted in figure (\ref{fig:cora:performance:walk_length}) with the values outlined in table (\ref{tbl:cora:performance:walk_length}). Higher performance scores are found for longer walks as more context generation increases the probability that the random walks capture a complete picture of the context of a node. As the walk length increases, relative performance gains decrease providing diminishing returns on subsequent increases. A node length between 9 and 12 present an acceptable compromise between performance and increased computational requirements in this project. Also note a convergence of F1 micro and macro scores for longer walk lengths, showing some class labels benefit more from longer walk lengths compared to others.
 
-  \centering
+\vspace{1em}
 
-  \begin{minipage}[b]{0.48\textwidth}
+% \begin{table}[!hbtp]
 
-    \begin{tabular}{c c c c}
+  % \centering
+
+  \begin{minipage}[c][17em]{0.49\textwidth}
+% \begin{table}[!hbtp]
+    \begin{tabular}{m{4em} m{7em} m{7em}}
 
       \hline
       Walk length & F1 (micro)  & F1 (macro) \\
@@ -144,14 +157,37 @@ Betweenness in the Cora dataset is also highly skewed with a maximum of 850663, 
 
     \end{tabular}
 
-    \caption{Walk length performance}
+    \captionof{table}{Walk length average performance}
     \label{tbl:cora:performance:walk_length}
+
+  % \end{table}
 
   \end{minipage}
 \hfill
-  \begin{minipage}[b]{0.48\textwidth}
+  \begin{minipage}[c][17em]{0.49\textwidth}
 
-    \begin{tabular}{c c c c}
+    \includegraphics[width=\linewidth]{./attachments/walk_length.png}
+    % \includegraphics[width=\linewidth]{./attachments/session-1/training-speed_noisy.png}
+      \captionof{figure}{Walk length average performance}
+      \label{fig:cora:performance:walk_length}
+
+
+
+  \end{minipage}
+
+% \end{table}
+
+\subsection{Walk number}
+
+The walk number represents the number of random walks performed for each node in the network. A Node2Vec experiment was run using $q = 1.0$, $p = 1.0$ and a walk length of $6$. Each experiment was repeated 3 times and average performance was plotted in figure (\ref{fig:cora:performance:walk_number}) and outlined in table (\ref{tbl:cora:performance:walk_number}).
+
+ Increasing the number of walks increases performance until around 50 walks / node at which point performance gains taper off. The walk number parameter needs to be sufficiently high as to sufficiently capture the contextual properties around a node of interest after which further increases provide no additional benefit.
+
+% \begin{figure}[!tbp]
+%   \centering
+% \vspace{1em}
+  \begin{minipage}[t][17em][c]{0.49\textwidth}
+    \begin{tabular}{m{4em} m{7em} m{7em}}
 
       \hline
       Walk number & F1 (micro)  & F1 (macro) \\
@@ -172,128 +208,110 @@ Betweenness in the Cora dataset is also highly skewed with a maximum of 850663, 
 
     \end{tabular}
 
-    \caption{Walk number performance}
+    \captionof{table}{Walk number average performance}
     \label{tbl:cora:performance:walk_number}
-
   \end{minipage}
-
-\end{table}
-
-@todo: explain general evolution and the reasoning behind it
-
-\begin{figure}[!tbp]
-  \centering
-  \begin{minipage}[b]{0.49\textwidth}
-    \includegraphics[width=\linewidth]{./attachments/walk_length.png}
-    % \includegraphics[width=\linewidth]{./attachments/session-1/training-speed_noisy.png}
-      \caption{Walk length performance}
-      \label{fig:walk-length}
-  \end{minipage}
-  \hfill
-  \begin{minipage}[b]{0.49\textwidth}
+  % \hfill
+  \begin{minipage}[t][17em][c]{0.49\textwidth}
     \includegraphics[width=\linewidth]{./attachments/walk_number.png}
     % \includegraphics[width=\linewidth]{./attachments/session-1/training-speed_noisy.png}
-      \caption{Walk number performance}
-      \label{fig:walk-number}
+      \captionof{figure}{Walk number average performance}
+      \label{fig:cora:performance:walk_number}
   \end{minipage}
-\end{figure}
-
-\subsection{Walk number}
-
-@todo: explain general evolution and the reasoning behind it
+% \end{figure}
 
 \subsection{Q/P values}
 
-@todo : Discuss Q/P value results (explain dips, general evolution, what it means)
+To examine the effect of q values on the average f1 performance scores, Node2Vec was repeated 3 times for various q values while keeping other values constant: $p = 1.0$, $60$ walks and $9$ walks per node. $p = 1.0$ marks a neutral point where walk reversals are not more or less preferred compared to remaining in the same neighborhood. Walk length and walk number were selected based on results previously discussed in order to balance performance with computational requirements.
 
-\begin{table}[!tbp]
+The average f1 performance scores are outlined in table (\ref{tbl:cora:performance:q_values}). The evolution of the average performance is plotted in figure (\ref{fig:q-values:short}) for $0.1 \le q \le 1.0$ (highlighting performance when leaving the neighborhood) and (\ref{fig:q-values:long}) for $0.1 \le q \le 50.0$ (highlighting performance when remaining in the neighborhood). Figures (\ref{fig:q-values:short}) and (\ref{fig:q-values:long}) show limited variation in average performance for $q \le 1.0$, but a noticeable decline for $q > 1.0$ indicating a preference to leave the neighborhood.
 
-  \centering
+To examine the effect of p values on f1 scores, Node2Vec was repeated 3 times for various p values while keeping other values constant: $q = 1.0$ (neutral preference), $60$ walks and $9$ walks per node. The average performance is outlined in table (\ref{tbl:cora:performance:p_values}). The evolution of the average performance is plotted in figure (\ref{fig:p-values:short}) (highlighting performance when preferring reversals) and (\ref{fig:p-values:long}) (not preferring reversals) shows a very low performance at p values close to $0$ and maximal performance at $p \ge 1.0$.
 
-  \begin{minipage}[b]{0.48\textwidth}
-
-    \begin{tabular}{c c c c}
-
-      \hline
-      Q & F1 (micro)  & F1 (macro) \\ [0.5ex]
-      \hline\hline
-
-      0.01	& 0.7495	& 0.7230 \\ \hline
-      0.1	& 0.7419	& 0.6960 \\ \hline
-      0.5	& 0.7620	& 0.7421 \\ \hline
-      1.0	& 0.7547	& 0.7342 \\ \hline
-      5.0	& 0.7273	& 0.7055 \\ \hline
-      10.0	& 0.6800	& 0.6259 \\ \hline
-      50.0	& 0.6695	& 0.6485 \\ \hline
-
-    \end{tabular}
-
-    \caption{Q value performance}
-    \label{tbl:cora:performance:q_values}
-
-  \end{minipage}
+\begin{minipage}[c][18em][c]{0.48\textwidth}
+  \begin{tabular}{m{4em} m{7em} m{7em}}
+    \hline
+    Q & F1 (micro)  & F1 (macro) \\ \hline\hline
+    0.01	& 0.7495	& 0.7230 \\ \hline
+    0.1	& 0.7419	& 0.6960 \\ \hline
+    0.5	& 0.7620	& 0.7421 \\ \hline
+    1.0	& 0.7547	& 0.7342 \\ \hline
+    5.0	& 0.7273	& 0.7055 \\ \hline
+    10.0	& 0.6800	& 0.6259 \\ \hline
+    50.0	& 0.6695	& 0.6485 \\ \hline
+  \end{tabular}
+  \captionof{table}{Q value average performance}
+  \label{tbl:cora:performance:q_values}
+\end{minipage}
 \hfill
-  \begin{minipage}[b]{0.48\textwidth}
+\begin{minipage}[c][18em][c]{0.48\textwidth}
+  \begin{tabular}{m{4em} m{7em} m{7em}}
+    \hline
+    P & F1 (micro)  & F1 (macro) \\
+    \hline\hline
+    0.01	& 0.5707	& 0.5025 \\ \hline
+    0.1	& 0.7161	& 0.6618 \\ \hline
+    0.5	& 0.7386	& 0.7171 \\ \hline
+    1.0	& 0.7559	& 0.7345 \\ \hline
+    5.0	& 0.7528	& 0.7277 \\ \hline
+    10.0	& 0.7546	& 0.7277 \\ \hline
+    50.0	& 0.7538	& 0.7075 \\ \hline
+  \end{tabular}
+  \captionof{table}{P value average performance}
+  \label{tbl:cora:performance:p_values}
+\end{minipage}
 
-    \begin{tabular}{c c c c}
-
-      \hline
-      P & F1 (micro)  & F1 (macro) \\ [0.5ex]
-      \hline\hline
-
-      0.01	& 0.5707	& 0.5025 \\ \hline
-      0.1	& 0.7161	& 0.6618 \\ \hline
-      0.5	& 0.7386	& 0.7171 \\ \hline
-      1.0	& 0.7559	& 0.7345 \\ \hline
-      5.0	& 0.7528	& 0.7277 \\ \hline
-      10.0	& 0.7546	& 0.7277 \\ \hline
-      50.0	& 0.7538	& 0.7075 \\ \hline
-
-    \end{tabular}
-
-    \caption{P value performance}
-    \label{tbl:cora:performance:p_values}
-
-  \end{minipage}
-
-\end{table}
-
-% P VALUE ANALYSIS
-\begin{figure}[!tbp]
-  \centering
-  \begin{minipage}[b]{0.49\textwidth}
-    \includegraphics[width=\linewidth]{./attachments/p_values_short.png}
-    \caption{P values (for q=1.0)}
-    \label{fig:q-values}
-  \end{minipage}
-  \hfill
-  \begin{minipage}[b]{0.49\textwidth}
-    \includegraphics[width=\linewidth]{./attachments/p_values_long.png}
-    \caption{P values (for q=1.0)}
-    \label{fig:p-values}
-  \end{minipage}
-\end{figure}
+% \end{table}
 
 % Q VALUE ANALYSIS
-\begin{figure}[!tbp]
-  \centering
-  \begin{minipage}[b]{0.49\textwidth}
+% \begin{figure}[!tbp]
+  % \centering
+  \begin{minipage}[c][18em][c]{0.49\textwidth}
     \includegraphics[width=\linewidth]{./attachments/q_values_short.png}
-    \caption{Q values (for p=1.0)}
-    \label{fig:q-values}
+    \captionof{figure}{Q values average performance(for p=1.0)}
+    \label{fig:q-values:short}
   \end{minipage}
   \hfill
-  \begin{minipage}[b]{0.49\textwidth}
+  \begin{minipage}[c][18em][c]{0.49\textwidth}
     \includegraphics[width=\linewidth]{./attachments/q_values_long.png}
-    \caption{Q values (for p=1.0)}
-    \label{fig:p-values}
+    \captionof{figure}{Q values average performance (for p=1.0)}
+    \label{fig:q-values:long}
   \end{minipage}
-\end{figure}
+% \end{figure}
+
+\begin{minipage}[c][18em][c]{0.49\textwidth}
+  \includegraphics[width=\linewidth]{./attachments/p_values_short.png}
+  \captionof{figure}{P values (for q=1.0)}
+  \label{fig:p-values:short}
+\end{minipage}
+\hfill
+\begin{minipage}[c][18em][c]{0.49\textwidth}
+  \includegraphics[width=\linewidth]{./attachments/p_values_long.png}
+  \captionof{figure}{P values average performance (for q=1.0)}
+  \label{fig:p-values:long}
+\end{minipage}
+
+\section{Discussion}
+
+Model performance improves with increasing numbers of \textit{walk length} and \textit{walk number} as it provides Node2Vec with more contextual data to base its embeddings on. There is a saturation point for both parameters where additional increases don't bring much additional gain.
+
+Intuitively, a better classification of a publication is possible when more of its direct and undirect citation links are known. That seems logical.
+
+\textit{Q} and \textit{p} values both affect our model performance as well. Both have been evaluated in isolation, but it should be noted that they control the properties of the random walker together. A real application (with more computing resources) would perhaps do a more fine-grained grid-search and plot a 2-D performance surface for additional insights.
+
+Our results favor low \textit{q} values suggesting a preference for a more homophilic similarity definition in this task, but note that a similarity is task-specific and that p/q values should be interpreted as hyperparameters requiring tuning. Furthermore, higher model performance with increasing p values leads us to the same similarity preference by reducing node redundancy in random walks avoiding reversals. One interpretation for this would be that classification benefits from venturing beyond the immediate citation neighborhood in the graph and that indirect citation links effectively improve model performance.
+
+On the validity of our results, multiple comments need to be made. First, performance scores were averaged over only 3 runs. The decreased performance for $q = 0.1$ in figure (\ref{fig:q-values:short}) might look different if averaged over more runs. Second, for $q \ or \ p > 1.0$ very few values were run to completely trust visual trends in the graph. Third, our findings might not (and most likely do not) translate to other datasets. Another classification task might benefit only from very short walks where longer walks hinder performance. In this manner, our specific findings and their interpretation on the dataset does not translate to other datasets. The configurability findings of the Node2Vec dataset do translate though, although we should question whether this configurability of our random walks should be configurable on a task level, node level or maybe a combination? Put differently, does node classification for different class labels benefit from different similarity definitions? Node2Vec only supports random walk properties to be configured on a task level and allows only one similarity definition per task.
+
+Also note that the reliability of our findings has not yet been investigated. Given our findings that \textit{q} and \textit{p} values similar to a DFS sampling are optimal, repeating our experiments using such sampling should produce a similar performance (keeping all else the same).
+
+Lastly, being a transductive method, Node2Vec needs to be repeated when our graph changes since our findings don't generalize to unseen data. This is not scaleable and an inductive approach is preferred.
 
 \section{Conclusion}
 
-@todo : What is needed here? Check slides?
-- focus on gained knowledge
+Node2Vec is capable of configuring a random walker and interpolate between BFS and DFS sampling depending on task specifics. The benefit of this approach is demonstrated by the performance trends demonstrated when varying \textit{q} and \textit{p} values in our experiments. Whether sampling biases should be defined on a task level or elsewhere remains a research question.
+
+In terms of scaleability and practicality, Node2Vec is less than ideal requiring significant resources and rework due to its transductive nature, something its configurability does not make up for.
 
 \section{Code}
 
@@ -301,16 +319,16 @@ The code can be consulted at https://github.com/daedalus-voyage/node2vec-report/
 
 The main files of interest are:
 
-\begin{tabular}{c c}
-
-  \hline
-  Description & Link   \\
-  \hline\hline
-
-  & https://github.com/daedalus-voyage/node2vec-report/blob/main/cora_node2vec.ipynb \\ \hline
-  
-
-\end{tabular}
+\begin{itemize}
+\item \href{https://github.com/daedalus-voyage/node2vec-report/blob/main/cora_dataset.ipynb}{Dataset exploration}
+\item \href{https://github.com/daedalus-voyage/node2vec-report/blob/main/cora_node2vec.ipynb}{Main analysis}
+\item \href{https://github.com/daedalus-voyage/node2vec-report/blob/main/run_pq_variations_keras.ipynb}{Node2Vec dataset analysis (incomplete)}
+\item \href{https://github.com/daedalus-voyage/node2vec-report/blob/main/pvals_plot.m}{P values plot}
+\item \href{https://github.com/daedalus-voyage/node2vec-report/blob/main/qvals_plot.m}{Q values plot}
+\item \href{https://github.com/daedalus-voyage/node2vec-report/blob/main/walk_length_plot.m}{Walk length plot}
+\item \href{https://github.com/daedalus-voyage/node2vec-report/blob/main/walk_number_plot.m}{Walk number plot}
+\item \href{https://github.com/daedalus-voyage/node2vec-report/blob/main/plot_performance.m}{Plotting function}
+\end{itemize}
 
 % \section{Glossary}
 
