@@ -298,6 +298,30 @@ To examine the effect of p values on f1 scores, Node2Vec was repeated 3 times fo
   \label{fig:p-values:long}
 \end{minipage}
 
+\subsection{Visualizing Node2Vec embeddings}
+
+From previous experiments, an experiment using $q = 1.0$, $walk \ length = 12$ and $walk \ number = 60$ is repeated for 3 values of $p$: $0.01$, $1.0$ and $50.0$. t-SNE is then applied for dimensionality reduction prior to visualization. Compared to PCA t-SNE preserves local data structure using the Kullback-Leibler divergence. Visualization using t-SNE therefore produced more informative visualizations compared to PCA.
+
+The resulting data was plotted in figures (\ref{fig:TSNE:0.01}), (\ref{fig:TSNE:1.0}) and (\ref{fig:TSNE:50.0}) showing increasing separation between class labels as $p$ values increase, visually confirming our previous findings. Figures (\ref{fig:TSNE:1.0}) and (\ref{fig:TSNE:50.0}) show better class separation compared to figure (\ref{fig:TSNE:0.01}), but no improvement amongst themselves.
+
+\begin{minipage}[c][20em][b]{0.35\textwidth}
+  \includegraphics[width=\linewidth]{./attachments/cora-TSNE-p001.png}
+  \captionof{figure}{t-SNE at $p = 0.01$}
+  \label{fig:TSNE:0.01}
+\end{minipage}
+\hfill
+\begin{minipage}[c][20em][b]{0.31\textwidth}
+  \includegraphics[width=\linewidth]{./attachments/cora-TSNE-p1.png}
+  \captionof{figure}{t-SNE at $p = 1.0$}
+  \label{fig:TSNE:1.0}
+\end{minipage}
+\hfill
+\begin{minipage}[c][20em][b]{0.32\textwidth}
+  \includegraphics[width=\linewidth]{./attachments/cora-TSNE-p50.png}
+  \captionof{figure}{t-SNE  at $p = 50.0$}
+  \label{fig:TSNE:50.0}
+\end{minipage}
+
 \section{Discussion}
 
 Model performance improves with increasing numbers of \textit{walk length} and \textit{walk number} as it provides Node2Vec with more contextual data to base its embeddings on. There is a saturation point for both parameters where additional increases don't bring much additional gain.
