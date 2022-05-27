@@ -54,7 +54,7 @@ Node2Vec improves on these strategies by providing a configuration mechanism to 
 
 \subsection{Random walk parameters}
 
-Instead of DFS or BFS sampling approaches, Node2Vec uses a biased random walker configured using 4 parameters: walk length, walk number, p, and q values. For each  node in the graph, the \textit{graph number} defines how many random walks are performed. Every random walk samples new nodes until a maximum number of nodes, specified by the \textit{walk length}.
+Instead of DFS or BFS sampling approaches, Node2Vec uses a biased random walker configured using 4 parameters: walk length, walk number, p values, and q values. For each  node in the graph, the \textit{walk number} defines how many random walks are performed. Every random walk samples new nodes until a maximum number of nodes, specified by the \textit{walk length}.
 
 Every random walk defines a $2^{nd}$ order Markov chain $... \to t \to v \to x$ where new nodes $x$ are sampled using a transition probability $\pi_{v,x}$ considering the previous 2 nodes $t$ and $v$. \textit{P} and \textit{q} parameterize $\alpha_{p q}(t, x)$ defining a bias for $\pi_{v,x}$ in sampling the transition of $v \to x$. Unnormalized, the transition probability calculates as $\pi_{v x}=\alpha_{pq}(t, x) \cdot w_{vx}$, using edge weights $w_{vx}$ and bias:
 
@@ -66,7 +66,7 @@ $$
 \end{array}\right.
 $$
 
-The transition bias is conditioned on $d_{tx}$, the shortest path length between nodes $t$ and$x$ in our random walk. $d_{tx} = 0$ therefore represents reverals, $d_{tx} = 1$ represent distance preserving samples (relative to $t$), and $d_{tx} = 2$ represents advancing samples moving further away from $t$. Intuitively, $p$ and $q$ encode both the speed with which the walker explores and the ease with which it leaves it's neighborhood. Tweaking these parameters allows the algorithm to interpolate between DFS and BFS sampling approaches.
+The transition bias is conditioned on $d_{tx}$, the shortest path length between nodes $t$ and $x$ in our random walk. $d_{tx} = 0$ therefore represents reversals, $d_{tx} = 1$ represent distance preserving samples (relative to $t$), and $d_{tx} = 2$ represents advancing samples moving further away from $t$. Intuitively, $p$ and $q$ together encode both the speed with which the walker explores and the ease with which it leaves it's neighborhood. Tweaking these parameters allows the algorithm to interpolate between DFS and BFS sampling approaches.
 
 Lower \textit{q} values produce a higher probability of leaving the neighborhood, while higher \textit{q} values prefer sticking to the same neighborhood. The \textit{q} value is therefore also called the \textit{in-out parameter}.
 
@@ -91,7 +91,7 @@ The requested and approved datasets are the ones used in the original Node2Vec p
 
 After loading the data and starting analysis, the Node2Vec algorithm experienced difficulty converging, producing inefficient node embeddings. Figure (\ref{fig:ppi:confusion-matrix}) shows the confusion matrix for one such attempted Node2Vec run, revealing failure to predict positive examples of the largest class in a highly unbalanced dataset. The dominance of negative samples allowed our classification to still obtain a high accuracy of 94\% while not learning features of interest. Balancing the dataset before classification did not reduce confusion.
 
-An incorrect import of the data or possibly mixups of certain identifiers is suspected. Ater careful inspection and given the lack of detailed documentation of the original datasets on the SNAP webpages, another dataset was considered instead for the investigation (the Cora dataset). Debugging the import of data formats was considered out-of-scope for this report.
+An incorrect import of the data or possibly mixups of certain identifiers is suspected. After careful inspection and given the lack of detailed documentation of the original datasets on the SNAP webpages, another dataset was considered instead for the investigation (the Cora dataset). Debugging the import of data formats was considered out-of-scope for this report.
 
 \subsection{Cora dataset}
 
@@ -122,7 +122,7 @@ Betweenness in the Cora dataset is also highly skewed with a maximum of 850663, 
 
 The analysis makes use of the \href{https://stellargraph.readthedocs.io}{stellargraph} library. More specifically, we followed the procedure outlined in the \href{https://stellargraph.readthedocs.io/en/stable/demos/node-classification/keras-node2vec-node-classification.html}{Node2Vec classification demo using keras}.
 
-We ran several experiments while varying parameters. Each experiment was repeated 3 times to average results accounting for randomness in our models, such as when initializing models using random weights. Each experiment run consisted of 4 steps: a random walk, generation of Node2Vec embeddings, training a logistic regression classifier, and performance evaluation. No standard deviations were calculated on our performance metrics. Although this could inform us on the reliability of our average performance metrics, computing time and resources on laptop hardware is limited and increasing repeats beyond 3 might not be feasible for this report.
+Experiments were designed to investigate the effect of random walk parameters. Each experiment was repeated 3 times to average results accounting for randomness in our models, such as random initialization of model weights. Each experiment run consisted of 4 steps: a random walk, generation of Node2Vec embeddings, training a logistic regression classifier, and performance evaluation. No standard deviations were calculated on our performance metrics. Although this could inform us on the reliability of our average performance metrics, computing time and resources on laptop hardware is limited and increasing repeats beyond 3 might not be feasible for this report.
 
 In the first step, random walks generate sentences from the graph data while varying parameter values to investigate their effect on model performance. From our corpus of sentences, node pairs $(target, \ context)$ are extracted with \textit{target} being the first node of a random walk and \textit{context} being the following nodes. The context of a \textit{target} node is thus described using a set of pairs.
 
@@ -137,7 +137,7 @@ A logistic classifier with 10-fold cross validation is then applied to predict c
 
 \subsection{Walk length}
 
-A Node2Vec experiment was run using $q = 1.0$, $p = 1.0$ for $20$ walks per node. Each experiment was repeated $3$ times to average results to account for random initialization of weights. The results plotted in figure (\ref{fig:cora:performance:walk_length}) with the values outlined in table (\ref{tbl:cora:performance:walk_length}). Higher performance scores are found for longer walks as more context generation increases the probability that the random walks capture a complete picture of the context of a node. As the walk length increases, relative performance gains decrease providing diminishing returns on subsequent increases. A node length between 9 and 12 present an acceptable compromise between performance and increased computational requirements in this project. Also note a convergence of F1 micro and macro scores for longer walk lengths, showing some class labels benefit more from longer walk lengths compared to others.
+A Node2Vec experiment was run using $q = 1.0$, $p = 1.0$ for $20$ walks per node. Each experiment was repeated $3$ times and results were averaged. The results are plotted in figure (\ref{fig:cora:performance:walk_length}) with the values outlined in table (\ref{tbl:cora:performance:walk_length}). Higher performance scores are found for longer walks as more context generation increases the probability that the random walks capture a complete picture of the context of a node. As the walk length increases, relative performance gains decrease providing diminishing returns on subsequent increases. A node length between 9 and 12 present an acceptable compromise between performance and increased computational requirements in this project. Also note a convergence of F1 micro and macro scores for longer walk lengths, showing some class labels benefit more from longer walk lengths compared to others.
 
 \vspace{1em}
 
